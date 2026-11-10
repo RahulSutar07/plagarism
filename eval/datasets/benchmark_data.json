@@ -1,0 +1,171 @@
+{
+  "reference_corpus": [
+    {
+      "id": 1,
+      "title": "Introduction to Convolutional Neural Networks for Image Classification",
+      "text": "Convolutional neural networks represent a specialized category of deep artificial neural networks designed primarily for processing structured grid data such as digital images. By utilizing convolutional layers, pooling operations, and activation functions, these networks effectively extract hierarchical spatial features from low-level edges to complex semantic objects. Modern architectures such as ResNet and EfficientNet have significantly reduced top-five error rates on benchmark vision datasets."
+    },
+    {
+      "id": 2,
+      "title": "Principles of Macroeconomic Monetary Policy and Inflation Dynamics",
+      "text": "Central banks utilize monetary policy instruments including benchmark interest rates, open market operations, and quantitative easing to achieve price stability and sustainable economic expansion. When inflationary pressures accelerate beyond statutory target boundaries, central monetary authorities systematically implement quantitative tightening and elevate borrowing costs to dampen aggregate consumer demand and stabilize currency valuations across foreign exchange markets."
+    },
+    {
+      "id": 3,
+      "title": "CRISPR-Cas9 Gene Editing Mechanisms and Therapeutic Horizons",
+      "text": "The CRISPR-Cas9 endonuclease system functions as a programmable molecular tool capable of introducing precise double-strand breaks at designated genomic loci. Guided by custom synthetic single-guide RNA sequences, the Cas9 enzyme identifies complementary DNA sequences adjacent to protospacer adjacent motif sites, facilitating targeted gene knockouts, nucleotide substitutions, and homologous recombination in eukaryotic organisms."
+    },
+    {
+      "id": 4,
+      "title": "Quantum Computing Architectures and Superconducting Qubits",
+      "text": "Quantum computers leverage the fundamental principles of quantum superposition and quantum entanglement to execute specific computational tasks exponentially faster than classical Turing machines. Superconducting transmon qubits operating at millikelvin temperatures maintain quantum coherence for sufficient durations to execute fault-tolerant error-mitigated quantum logic gate sequences."
+    },
+    {
+      "id": 5,
+      "title": "Renewable Energy Grid Integration and Battery Storage Systems",
+      "text": "The transition toward zero-carbon electrical energy infrastructures requires large-scale integration of intermittent photovoltaic solar arrays and offshore wind turbine generation systems. Grid-scale lithium iron phosphate battery energy storage facilities provide critical frequency regulation, peak-shaving capabilities, and synthetic inertia necessary to maintain alternating current grid equilibrium under fluctuating generation conditions."
+    }
+  ],
+  "passages": [
+    {
+      "id": "v_01",
+      "category": "verbatim",
+      "expected_plagiarized": true,
+      "source_id": 1,
+      "text": "Convolutional neural networks represent a specialized category of deep artificial neural networks designed primarily for processing structured grid data such as digital images."
+    },
+    {
+      "id": "v_02",
+      "category": "verbatim",
+      "expected_plagiarized": true,
+      "source_id": 2,
+      "text": "Central banks utilize monetary policy instruments including benchmark interest rates, open market operations, and quantitative easing to achieve price stability and sustainable economic expansion."
+    },
+    {
+      "id": "v_03",
+      "category": "verbatim",
+      "expected_plagiarized": true,
+      "source_id": 3,
+      "text": "The CRISPR-Cas9 endonuclease system functions as a programmable molecular tool capable of introducing precise double-strand breaks at designated genomic loci."
+    },
+    {
+      "id": "v_04",
+      "category": "verbatim",
+      "expected_plagiarized": true,
+      "source_id": 4,
+      "text": "Quantum computers leverage the fundamental principles of quantum superposition and quantum entanglement to execute specific computational tasks exponentially faster than classical Turing machines."
+    },
+    {
+      "id": "v_05",
+      "category": "verbatim",
+      "expected_plagiarized": true,
+      "source_id": 5,
+      "text": "The transition toward zero-carbon electrical energy infrastructures requires large-scale integration of intermittent photovoltaic solar arrays and offshore wind turbine generation systems."
+    },
+    {
+      "id": "le_01",
+      "category": "light_edit",
+      "expected_plagiarized": true,
+      "source_id": 1,
+      "text": "Convolutional neural networks represent a specialized category of deep networks designed primarily for processing grid data such as digital images."
+    },
+    {
+      "id": "le_02",
+      "category": "light_edit",
+      "expected_plagiarized": true,
+      "source_id": 2,
+      "text": "Central banks utilize monetary policy instruments including interest rates, open market operations, and quantitative easing to achieve price stability and long-term expansion."
+    },
+    {
+      "id": "le_03",
+      "category": "light_edit",
+      "expected_plagiarized": true,
+      "source_id": 3,
+      "text": "Guided by custom synthetic single-guide RNA sequences, the Cas9 enzyme identifies complementary DNA sequences adjacent to protospacer adjacent motif sites."
+    },
+    {
+      "id": "le_04",
+      "category": "light_edit",
+      "expected_plagiarized": true,
+      "source_id": 5,
+      "text": "Grid-scale lithium iron phosphate battery energy storage facilities provide critical frequency regulation, peak-shaving capabilities, and synthetic inertia necessary to maintain equilibrium."
+    },
+    {
+      "id": "ev_01",
+      "category": "evasion",
+      "expected_plagiarized": true,
+      "source_id": 1,
+      "text": "Cоnvоlutiоnаl neurаl netwоrks represent а speciаlized cаtegоry оf deep аrtificiаl neurаl netwоrks designed primаrily fоr prоcessing."
+    },
+    {
+      "id": "ev_02",
+      "category": "evasion",
+      "expected_plagiarized": true,
+      "source_id": 4,
+      "text": "Qu\u200bant\u200cum com\u200bput\u200cers lev\u200der\u200dage the fun\u200dda\u2060men\u200dtal prin\u200dci\u200dples of quan\u200dtum su\u200dper\u200dpo\u200dsi\u200dtion and en\u200dtan\u200dgle\u200dment to ex\u200de\u200dcute com\u200bpu\u200dta\u200dtion."
+    },
+    {
+      "id": "cq_01",
+      "category": "cited_quote",
+      "expected_plagiarized": false,
+      "source_id": 1,
+      "text": "As noted by researchers, \"Convolutional neural networks represent a specialized category of deep artificial neural networks designed primarily for processing structured grid data\" (LeCun et al., 2015)."
+    },
+    {
+      "id": "cq_02",
+      "category": "cited_quote",
+      "expected_plagiarized": false,
+      "source_id": 3,
+      "text": "The discovery was described as follows: \"The CRISPR-Cas9 endonuclease system functions as a programmable molecular tool capable of introducing precise double-strand breaks at designated genomic loci\" [4]."
+    },
+    {
+      "id": "hp_01",
+      "category": "heavy_paraphrase",
+      "expected_plagiarized": true,
+      "source_id": 1,
+      "text": "Convolutional neural architectures constitute a specialized class of deep networks engineered specifically to analyze visual grid arrays including digital imagery."
+    },
+    {
+      "id": "hp_02",
+      "category": "heavy_paraphrase",
+      "expected_plagiarized": true,
+      "source_id": 3,
+      "text": "The CRISPR-Cas9 endonuclease mechanism operates as an adaptable molecular instrument designed to create targeted double-strand cuts at specified locations within the genome."
+    },
+    {
+      "id": "orig_01",
+      "category": "original",
+      "expected_plagiarized": false,
+      "source_id": null,
+      "text": "Photosynthesis is the biochemical process through which green flora and phytoplankton absorb sunlight, transforming ambient carbon dioxide and liquid water into glucose carbohydrates while liberating atmospheric oxygen."
+    },
+    {
+      "id": "orig_02",
+      "category": "original",
+      "expected_plagiarized": false,
+      "source_id": null,
+      "text": "The French Revolution of 1789 profoundly reorganized societal hierarchies across Western Europe, overthrowing absolute feudal monarchies in favor of democratic constitutionalism and secular civil legal frameworks."
+    },
+    {
+      "id": "orig_03",
+      "category": "original",
+      "expected_plagiarized": false,
+      "source_id": null,
+      "text": "Software architecture principles suggest segregating concerns between database access persistence layers, domain business rules, and graphical presentation interfaces to foster scalable maintainability."
+    },
+    {
+      "id": "orig_04",
+      "category": "original",
+      "expected_plagiarized": false,
+      "source_id": null,
+      "text": "Plate tectonics explains the dynamic geophysical motion of continental crust fragments gliding across the convective asthenosphere, resulting in seismic earthquakes and volcanic subduction zones."
+    },
+    {
+      "id": "orig_05",
+      "category": "original",
+      "expected_plagiarized": false,
+      "source_id": null,
+      "text": "Behavioral psychology examines how positive reinforcement conditioning modifies vertebrate habit formation when rewards are presented intermittently following desirable behavioral responses."
+    }
+  ]
+}

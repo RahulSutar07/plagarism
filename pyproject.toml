@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --ignore=tests/load_test.py"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

@@ -1,0 +1,85 @@
+# Production-Ready Multi-Service Architecture for Plagiarism Pre-Check
+services:
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: plagiarism
+      POSTGRES_PASSWORD: plagiarism
+      POSTGRES_DB: plagiarism
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plagiarism -d plagiarism"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: .
+    env_file: [.env]
+    environment:
+      PC_REDIS_URL: redis://redis:6379/0
+      PC_DATABASE_URL: postgresql://plagiarism:plagiarism@db:5432/plagiarism
+    ports: ["8000:8000"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  worker-fast:
+    build: .
+    command: python -m worker.run fast
+    env_file: [.env]
+    environment:
+      PC_REDIS_URL: redis://redis:6379/0
+      PC_DATABASE_URL: postgresql://plagiarism:plagiarism@db:5432/plagiarism
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    mem_limit: 2g
+
+  worker-ocr:
+    build: .
+    command: python -m worker.run ocr
+    env_file: [.env]
+    environment:
+      PC_REDIS_URL: redis://redis:6379/0
+      PC_DATABASE_URL: postgresql://plagiarism:plagiarism@db:5432/plagiarism
+      PC_OCR_CONCURRENCY: 1
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    mem_limit: 2g
+
+  retention-cleaner:
+    build: .
+    command: python -m worker.retention
+    env_file: [.env]
+    environment:
+      PC_DATABASE_URL: postgresql://plagiarism:plagiarism@db:5432/plagiarism
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 512m
+
+volumes:
+  pgdata:

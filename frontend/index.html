@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plagiarism Pre-Check Platform | Academic Integrity</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .match-exact { background-color: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; }
+    .match-near { background-color: #fef3c7; border-bottom: 2px solid #f59e0b; color: #92400e; }
+    .match-paraphrase { background-color: #e0e7ff; border-bottom: 2px solid #6366f1; color: #3730a3; }
+    .match-excluded { background-color: #f1f5f9; color: #64748b; text-decoration: line-through; }
+    
+    /* Smooth custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50/80 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- Top Glassmorphism Navigation -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-50">
+    <div class="max-w-[700px] mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-extrabold text-lg shadow-sm shadow-blue-500/20 shrink-0">
+          P
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base font-bold tracking-tight text-slate-900 leading-tight">Plagiarism Pre-Check</h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60 uppercase tracking-wider">
+              Pre-Check
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 font-medium hidden sm:block">Academic Integrity & Similarity Detection</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2.5 sm:space-x-3">
+        <span class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> v1.0.0
+        </span>
+        <div id="auth-nav-container">
+          <button onclick="openAuthModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-3.5 rounded-lg shadow-sm transition">
+            Sign In / Register
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Pre-Check Advisory Banner -->
+  <aside class="bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-blue-50/90 border-b border-blue-100/70 py-2.5 px-4">
+    <div class="max-w-[700px] mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 text-xs text-slate-600">
+      <div class="flex items-center space-x-2">
+        <span class="text-blue-600 font-bold shrink-0">ℹ Notice:</span>
+        <p>Pre-check catches web text reuse & paraphrasing before official submission.</p>
+      </div>
+      <span class="text-slate-500 font-medium text-[11px] sm:text-xs">Self-audit tool • Not an institutional replacement for Turnitin / iThenticate.</span>
+    </div>
+  </aside>
+
+  <main class="max-w-[700px] mx-auto px-3.5 sm:px-6 py-6 sm:py-8 flex-1 w-full">
+
+    <!-- Primary Submission Card -->
+    <div id="submit-card" class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
+      
+      <!-- Apple/Linear Segmented Control Tab Switcher -->
+      <div class="p-3 sm:p-4 bg-slate-50/70 border-b border-slate-200/70">
+        <div class="bg-slate-200/70 p-1 rounded-xl flex max-w-md mx-auto sm:max-w-none">
+          <button id="tab-paste-btn" class="flex-1 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg bg-white text-blue-600 shadow-sm transition" onclick="switchTab('paste')">
+            <span class="inline-flex items-center space-x-1.5">
+              <span>✍</span>
+              <span>Paste Text</span>
+            </span>
+          </button>
+          <button id="tab-upload-btn" class="flex-1 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition" onclick="switchTab('upload')">
+            <span class="inline-flex items-center space-x-1.5">
+              <span>📄</span>
+              <span>Upload Document</span>
+              <span class="text-[10px] hidden xs:inline opacity-70">(.pdf, .docx, .txt)</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-5 sm:p-7 md:p-8">
+        <!-- Error notification banner -->
+        <div id="error-alert" class="hidden mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-xs sm:text-sm text-red-800 flex items-start space-x-2.5 shadow-sm">
+          <span class="font-bold text-red-600 shrink-0">⚠️ Error:</span>
+          <span id="error-msg" class="break-words font-medium"></span>
+        </div>
+
+        <!-- 1. Paste Mode -->
+        <div id="tab-paste">
+          <div class="mb-4">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Document Title</label>
+            <input type="text" id="paste-title" placeholder="e.g. Chapter 3 - Methodology & Data Collection" class="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:outline-none transition">
+          </div>
+          <div class="mb-5">
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Text Content (Min 100, Max 2,000 words)</label>
+              <span id="paste-word-count" class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">0 / 2,000 words</span>
+            </div>
+            <textarea id="paste-text" rows="10" placeholder="Paste your essay, paper draft, or thesis text here (100 to 2,000 words)..." class="w-full p-4 bg-slate-50/50 border border-slate-300 rounded-xl text-xs sm:text-sm leading-relaxed focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:outline-none font-mono text-slate-800 transition" oninput="updateWordCount()"></textarea>
+          </div>
+        </div>
+
+        <!-- 2. Upload Document Mode -->
+        <div id="tab-upload" class="hidden">
+          <div class="mb-4">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Document Title (Optional)</label>
+            <input type="text" id="upload-title" placeholder="Leave blank to use original file name" class="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:outline-none transition">
+          </div>
+          
+          <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.txt" onchange="handleFileSelected(event)">
+          
+          <!-- Dropzone Container -->
+          <div id="dropzone-box" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-6 sm:p-9 text-center bg-slate-50/40 hover:bg-blue-50/30 transition cursor-pointer mb-5 group" onclick="document.getElementById('file-input').click()">
+            <div id="dropzone-empty-state">
+              <div class="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-105 transition">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <p id="file-label" class="text-sm sm:text-base font-bold text-slate-800 mb-1">Click to select document or drag & drop</p>
+              <p class="text-xs text-slate-500 mb-3">Accepts PDF, Microsoft Word (.docx), or plain text (.txt)</p>
+              <div class="inline-flex items-center space-x-2 text-[11px] font-semibold text-slate-600 bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-2xs">
+                <span>Max 7 MB</span>
+                <span>•</span>
+                <span>Up to 200 pages</span>
+              </div>
+            </div>
+
+            <!-- Selected File Preview Card (Shown after selection) -->
+            <div id="dropzone-selected-state" class="hidden py-2">
+              <div class="max-w-md mx-auto bg-white border border-blue-200 rounded-xl p-3.5 shadow-sm flex items-center space-x-3 text-left">
+                <div id="selected-file-icon" class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-xs text-blue-700 shrink-0 uppercase">
+                  DOCX
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p id="selected-file-name" class="text-xs sm:text-sm font-bold text-slate-900 truncate">document.docx</p>
+                  <p id="selected-file-size" class="text-[11px] text-slate-500 font-medium">0 MB • Ready for analysis</p>
+                </div>
+                <button type="button" onclick="event.stopPropagation(); clearSelectedFile();" class="text-slate-400 hover:text-red-600 p-1.5 rounded-lg transition" title="Remove file">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+              <p class="text-[11px] text-blue-600 font-semibold mt-3">Click box to choose a different file</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detection Pipeline Options -->
+        <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 sm:p-4 mb-6">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2.5">Analysis Modules</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
+            <label class="flex items-start space-x-3 p-2.5 bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-blue-400 transition">
+              <input type="checkbox" id="opt-paraphrase" checked class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mt-0.5 shrink-0">
+              <div>
+                <span class="text-xs font-semibold text-slate-800 block">Neural Paraphrase Detection</span>
+                <span class="text-[11px] text-slate-500">Sentence-Transformers embeddings catch rephrased passages.</span>
+              </div>
+            </label>
+            <label class="flex items-start space-x-3 p-2.5 bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-blue-400 transition">
+              <input type="checkbox" id="opt-web" checked class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 mt-0.5 shrink-0">
+              <div>
+                <span class="text-xs font-semibold text-slate-800 block">Open-Web & Academic Search</span>
+                <span class="text-[11px] text-slate-500">Cross-checks against open research repositories and web sources.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+          <p class="text-xs text-slate-500 text-center sm:text-left">
+            🔒 Documents are analyzed in memory and immediately discarded.
+          </p>
+          <button id="start-btn" onclick="submitScan()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/20 active:scale-[0.99] transition flex items-center justify-center space-x-2 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            <span>Run Plagiarism Pre-Check</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Scanning Progress View -->
+    <div id="progress-card" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10 my-8 text-center max-w-xl mx-auto">
+      <div class="relative w-16 h-16 mx-auto mb-4">
+        <div class="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-blue-600 font-bold text-xs">AI</div>
+      </div>
+      <h3 id="progress-status" class="text-base sm:text-lg font-bold text-slate-900 mb-1">Scanning Document...</h3>
+      <p id="progress-stage" class="text-xs sm:text-sm text-slate-500 mb-5">Initializing pipeline & tokenizing text...</p>
+      
+      <div class="w-full bg-slate-100 rounded-full h-3 mb-3 overflow-hidden p-0.5">
+        <div id="progress-bar" class="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 15%"></div>
+      </div>
+      <div class="flex justify-between text-xs text-slate-500 font-semibold px-1">
+        <span id="queue-pos-label">Position in Queue: 1</span>
+        <span id="progress-pct-label" class="text-blue-600 font-bold">15%</span>
+      </div>
+    </div>
+
+    <!-- Results Dashboard Card -->
+    <div id="results-card" class="hidden mt-6 space-y-5">
+
+      <!-- Official Certificate Banner -->
+      <div id="res-cert-banner" class="hidden bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-sm">
+        <div class="flex items-start sm:items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 mt-0.5 sm:mt-0">
+            ✓
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold text-emerald-950 uppercase tracking-wider">Official Certificate Issued</span>
+              <span id="res-cert-id" class="text-xs font-mono font-bold bg-white text-emerald-800 px-2.5 py-0.5 rounded-md border border-emerald-300"></span>
+            </div>
+            <p class="text-xs text-emerald-800 mt-1">Cryptographically hashed verification token generated. Reviewers can verify score online.</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <a id="res-cert-verify-link" href="#" target="_blank" class="flex-1 sm:flex-none text-center text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl transition inline-flex items-center justify-center space-x-1.5 shadow-sm">
+            <span>Verify Online</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+          <button onclick="copyVerificationLink()" id="res-cert-copy-btn" class="flex-1 sm:flex-none text-center text-xs bg-white hover:bg-slate-50 border border-emerald-300 text-emerald-800 font-bold py-2.5 px-3.5 rounded-xl transition inline-flex items-center justify-center space-x-1.5 shadow-2xs">
+            <span id="res-cert-copy-text">Copy Link</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Report Header & Actions -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/90 p-5 sm:p-7">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-2">
+              <span>●</span>
+              <span>Report Ready</span>
+            </div>
+            <h2 id="res-title" class="text-xl sm:text-2xl font-extrabold text-slate-900 break-words">Document Title</h2>
+            <p id="res-meta" class="text-xs text-slate-500 mt-1">1,240 words analyzed • Academic corpus searched</p>
+          </div>
+          <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full md:w-auto">
+            <button onclick="downloadCertificate()" class="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center space-x-1.5">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span>Certificate</span>
+            </button>
+            <button onclick="downloadPdf()" class="flex-1 sm:flex-none justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3.5 rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center space-x-1.5">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>PDF Report</span>
+            </button>
+            <button onclick="resetScan()" class="w-full sm:w-auto text-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-3.5 rounded-xl text-xs sm:text-sm transition">
+              New Scan
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Gauges (2x2 on Mobile/Tablet, 4 on Desktop) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6">
+          <div class="bg-gradient-to-b from-blue-50/50 to-slate-50 border border-blue-100 rounded-xl p-4 text-center">
+            <div id="res-overall" class="text-3xl sm:text-4xl font-extrabold text-blue-600 tracking-tight">0.0%</div>
+            <div class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mt-1.5">Overall Similarity</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+            <div id="res-exact" class="text-2xl sm:text-3xl font-extrabold text-red-600 tracking-tight">0.0%</div>
+            <div class="text-[11px] sm:text-xs font-semibold text-slate-600 mt-1.5">Exact Match</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+            <div id="res-near" class="text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight">0.0%</div>
+            <div class="text-[11px] sm:text-xs font-semibold text-slate-600 mt-1.5">Near Match</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+            <div id="res-para" class="text-2xl sm:text-3xl font-extrabold text-indigo-600 tracking-tight">0.0%</div>
+            <div class="text-[11px] sm:text-xs font-semibold text-slate-600 mt-1.5">Paraphrased</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Flags -->
+      <div id="res-flags-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <h3 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 mb-2.5">Audit Flags & Formatting Notes</h3>
+        <ul id="res-flags-list" class="space-y-2 text-xs text-slate-600 list-disc list-inside"></ul>
+      </div>
+
+      <!-- Text Viewer & Sources -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Interactive Highlighted Text Viewer -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 flex flex-col">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-200 mb-4 gap-2">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Document Text & Matched Passages</h3>
+            <div class="flex flex-wrap items-center gap-2 text-xs font-medium">
+              <span class="inline-flex items-center"><span class="w-3 h-3 rounded match-exact mr-1.5"></span> Exact</span>
+              <span class="inline-flex items-center"><span class="w-3 h-3 rounded match-near mr-1.5"></span> Near</span>
+              <span class="inline-flex items-center"><span class="w-3 h-3 rounded match-paraphrase mr-1.5"></span> Paraphrase</span>
+            </div>
+          </div>
+          <div id="res-highlighted-text" class="p-4 bg-slate-50/70 border border-slate-200 rounded-xl text-xs sm:text-sm leading-relaxed max-h-[480px] overflow-x-auto overflow-y-auto font-mono text-slate-800 whitespace-pre-wrap break-words"></div>
+        </div>
+
+        <!-- Matched Sources Table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+          <h3 class="text-sm sm:text-base font-bold text-slate-900 pb-3.5 border-b border-slate-200 mb-4">Matched Sources</h3>
+          <div id="res-sources-list" class="space-y-3 max-h-[480px] overflow-y-auto"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clean Footer with Legal Positioning -->
+  <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-xs text-slate-500">
+    <div class="max-w-[700px] mx-auto px-4 space-y-2 text-center sm:text-left">
+      <p><b>Legal Disclaimer:</b> This report indicates textual similarity with sources in searched databases. It is an indicator, not proof of plagiarism. A qualified academic evaluator must make the final determination.</p>
+      <p class="text-slate-400">Positioning: A free pre-check that catches open-web and paraphrased plagiarism so students and scholars can fix issues before official submission.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Automatic backend resolution: Handles port 8000 (native), port 5500 (Live Server), and file://
+    const API_BASE = (window.location.port === '8000') 
+      ? '' 
+      : (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+        ? `${window.location.protocol}//${window.location.hostname}:8000`
+        : 'http://127.0.0.1:8000';
+
+    let currentTab = 'paste';
+    let currentJobId = null;
+    let currentVerificationToken = null;
+    let pollInterval = null;
+    let selectedUploadFile = null;
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const pasteTab = document.getElementById('tab-paste');
+      const uploadTab = document.getElementById('tab-upload');
+      const pasteBtn = document.getElementById('tab-paste-btn');
+      const uploadBtn = document.getElementById('tab-upload-btn');
+
+      if (tab === 'paste') {
+        pasteTab.classList.remove('hidden');
+        uploadTab.classList.add('hidden');
+        pasteBtn.className = "flex-1 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg bg-white text-blue-600 shadow-sm transition";
+        uploadBtn.className = "flex-1 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition";
+        console.log('[Pre-Check] Switched to Paste Text tab');
+      } else {
+        pasteTab.classList.add('hidden');
+        uploadTab.classList.remove('hidden');
+        uploadBtn.className = "flex-1 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg bg-white text-blue-600 shadow-sm transition";
+        pasteBtn.className = "flex-1 py-2 sm:py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition";
+        console.log('[Pre-Check] Switched to Upload Document tab');
+      }
+    }
+
+    function getWordCount(str) {
+      if (!str) return 0;
+      const matches = str.trim().match(/\S+/g);
+      return matches ? matches.length : 0;
+    }
+
+    function updateWordCount() {
+      const textarea = document.getElementById('paste-text');
+      if (!textarea) return;
+      const text = textarea.value || '';
+      const count = getWordCount(text);
+      const counter = document.getElementById('paste-word-count');
+      if (!counter) return;
+
+      counter.innerText = `${count.toLocaleString()} / 2,000 words`;
+      if (count > 2000) {
+        counter.className = "text-xs font-bold px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-300";
+      } else if (count >= 100) {
+        counter.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200";
+      } else if (count > 0) {
+        counter.className = "text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200";
+      } else {
+        counter.className = "text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200";
+      }
+    }
+
+    function handleFileSelected(fileOrEvent) {
+      let file = null;
+      if (fileOrEvent instanceof File) {
+        file = fileOrEvent;
+      } else if (fileOrEvent && fileOrEvent.target && fileOrEvent.target.files) {
+        file = fileOrEvent.target.files[0];
+      } else if (fileOrEvent && fileOrEvent.dataTransfer && fileOrEvent.dataTransfer.files) {
+        file = fileOrEvent.dataTransfer.files[0];
+      }
+
+      if (!file) return;
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['pdf', 'docx', 'txt'].includes(ext)) {
+        showError(`Unsupported file format '.${ext}'. Allowed formats: .pdf, .docx, .txt`);
+        clearSelectedFile();
+        return;
+      }
+
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      if (file.size > 7 * 1024 * 1024) {
+        showError(`File size (${sizeMb} MB) exceeds maximum allowed upload limit (7 MB).`);
+        clearSelectedFile();
+        return;
+      }
+
+      hideError();
+      selectedUploadFile = file;
+
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('file-input').files = dt.files;
+      } catch (_) {}
+
+      document.getElementById('selected-file-name').innerText = file.name;
+      document.getElementById('selected-file-size').innerText = `${sizeMb} MB • Ready for analysis`;
+      document.getElementById('selected-file-icon').innerText = ext.toUpperCase();
+
+      document.getElementById('dropzone-empty-state').classList.add('hidden');
+      document.getElementById('dropzone-selected-state').classList.remove('hidden');
+      console.log(`[Pre-Check] Document staged: ${file.name} (${sizeMb} MB)`);
+    }
+
+    function clearSelectedFile() {
+      selectedUploadFile = null;
+      const input = document.getElementById('file-input');
+      if (input) input.value = '';
+      document.getElementById('dropzone-empty-state').classList.remove('hidden');
+      document.getElementById('dropzone-selected-state').classList.add('hidden');
+      console.log('[Pre-Check] Staged file cleared');
+    }
+
+    function setupDragAndDrop() {
+      const dropzone = document.getElementById('dropzone-box');
+      if (!dropzone) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        window.addEventListener(eventName, (e) => {
+          e.preventDefault();
+        }, false);
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('border-blue-500', 'bg-blue-50/50');
+          dropzone.classList.remove('border-slate-300', 'bg-slate-50/40');
+        }, false);
+      });
+
+      ['dragleave', 'dragend'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('border-blue-500', 'bg-blue-50/50');
+          dropzone.classList.add('border-slate-300', 'bg-slate-50/40');
+        }, false);
+      });
+
+      window.addEventListener('drop', (e) => {
+        e.preventDefault();
+      }, false);
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('border-blue-500', 'bg-blue-50/50');
+        dropzone.classList.add('border-slate-300', 'bg-slate-50/40');
+
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          handleFileSelected(dt.files[0]);
+        }
+      }, false);
+    }
+
+    function setupTextListeners() {
+      const textarea = document.getElementById('paste-text');
+      if (!textarea) return;
+      textarea.addEventListener('input', updateWordCount);
+      textarea.addEventListener('keyup', updateWordCount);
+      textarea.addEventListener('change', updateWordCount);
+      textarea.addEventListener('paste', () => {
+        setTimeout(updateWordCount, 25);
+      });
+    }
+
+    function showError(msg) {
+      const alert = document.getElementById('error-alert');
+      document.getElementById('error-msg').innerText = msg;
+      alert.classList.remove('hidden');
+    }
+
+    function hideError() {
+      document.getElementById('error-alert').classList.add('hidden');
+    }
+
+    function setButtonLoading(loading) {
+      const btn = document.getElementById('start-btn');
+      if (!btn) return;
+      if (loading) {
+        btn.disabled = true;
+        btn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Uploading & Preparing Scan...</span>
+        `;
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = `
+          <svg class="w-4 h-4 mr-1.5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          <span>Run Plagiarism Pre-Check</span>
+        `;
+        btn.classList.remove('opacity-80', 'cursor-not-allowed');
+      }
+    }
+
+    async function submitScan() {
+      hideError();
+      const enableWeb = document.getElementById('opt-web').checked;
+      const enablePara = document.getElementById('opt-paraphrase').checked;
+
+      let fileToUpload = null;
+      let textToSubmit = '';
+      let titleToSubmit = '';
+
+      if (currentTab === 'paste') {
+        textToSubmit = document.getElementById('paste-text').value.trim();
+        const wordCount = getWordCount(textToSubmit);
+        if (!textToSubmit) {
+          showError('Please paste your document text into the box before starting the check.');
+          return;
+        }
+        if (wordCount < 100) {
+          showError(`Pasted text contains ${wordCount} words. A minimum of 100 words is required for accurate similarity analysis.`);
+          return;
+        }
+        if (wordCount > 2000) {
+          showError(`Pasted text contains ${wordCount} words, which exceeds the 2,000-word limit. Please trim the text or use Upload Document mode.`);
+          return;
+        }
+        titleToSubmit = document.getElementById('paste-title').value.trim() || 'Pasted Document';
+      } else {
+        const fileInput = document.getElementById('file-input');
+        fileToUpload = selectedUploadFile || (fileInput && fileInput.files && fileInput.files[0]);
+        if (!fileToUpload) {
+          showError('Please select or drop a document (.pdf, .docx, .txt) to upload.');
+          return;
+        }
+        titleToSubmit = document.getElementById('upload-title').value.trim();
+      }
+
+      setButtonLoading(true);
+
+      let res;
+      try {
+        if (currentTab === 'paste') {
+          console.log(`[Pre-Check] Submitting ${getWordCount(textToSubmit)} words to ${API_BASE}/api/check/paste`);
+          res = await fetch(`${API_BASE}/api/check/paste`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders()
+            },
+            body: JSON.stringify({
+              text: textToSubmit,
+              title: titleToSubmit,
+              enable_web_search: enableWeb,
+              enable_paraphrase: enablePara
+            })
+          });
+        } else {
+          console.log(`[Pre-Check] Submitting ${fileToUpload.name} (${(fileToUpload.size / (1024*1024)).toFixed(2)} MB) to ${API_BASE}/api/check/upload`);
+          const formData = new FormData();
+          formData.append('file', fileToUpload, fileToUpload.name);
+          if (titleToSubmit) formData.append('title', titleToSubmit);
+          formData.append('enable_web_search', enableWeb);
+          formData.append('enable_paraphrase', enablePara);
+
+          res = await fetch(`${API_BASE}/api/check/upload`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: formData
+          });
+        }
+
+        console.log(`[Pre-Check] Server response status: ${res.status} ${res.statusText}`);
+
+        let data = null;
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          try {
+            data = await res.json();
+          } catch (_) {
+            data = null;
+          }
+        }
+
+        if (!res.ok) {
+          setButtonLoading(false);
+          let errorMessage = null;
+          if (data && data.detail) {
+            errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+          } else if (res.status === 405) {
+            errorMessage = 'API route not reachable on this server. Please ensure the backend is running on http://127.0.0.1:8000.';
+          } else if (res.status === 413) {
+            errorMessage = 'File exceeds maximum upload size (7 MB). Please upload a smaller document.';
+          } else if (res.status === 429) {
+            errorMessage = 'Daily scan limit reached. Please sign in or try again tomorrow.';
+          } else {
+            errorMessage = `Unable to complete scan submission (HTTP ${res.status}). Please check server connection.`;
+          }
+          showError(errorMessage);
+          return;
+        }
+
+        if (!data || !data.job_id) {
+          setButtonLoading(false);
+          showError('Unexpected server response: missing job tracking ID.');
+          return;
+        }
+
+        console.log(`[Pre-Check] Job queued successfully: ID ${data.job_id}`);
+        currentJobId = data.job_id;
+        showProgress();
+        startPolling();
+
+      } catch (err) {
+        console.error('[Pre-Check] Network request failed:', err);
+        setButtonLoading(false);
+        showError(`Network error connecting to API: Unable to connect to ${API_BASE || window.location.origin}. Please ensure the backend server is running.`);
+      }
+    }
+
+    function showProgress() {
+      document.getElementById('submit-card').classList.add('hidden');
+      document.getElementById('results-card').classList.add('hidden');
+      document.getElementById('progress-card').classList.remove('hidden');
+    }
+
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/jobs/${currentJobId}`);
+          if (!res.ok) return;
+          const job = await res.json();
+
+          document.getElementById('progress-status').innerText = `Status: ${job.status.toUpperCase()}`;
+          document.getElementById('progress-stage').innerText = `Stage: ${job.stage}...`;
+          document.getElementById('progress-bar').style.width = `${job.progress_pct}%`;
+          document.getElementById('progress-pct-label').innerText = `${job.progress_pct}%`;
+          if (job.queue_position) {
+            document.getElementById('queue-pos-label').innerText = `Queue Position: #${job.queue_position}`;
+          }
+
+          if (job.status === 'completed') {
+            clearInterval(pollInterval);
+            renderResults(job.result, job);
+          } else if (job.status === 'failed') {
+            clearInterval(pollInterval);
+            showError(job.error || 'Scan failed.');
+            resetScan();
+          }
+        } catch (e) {
+          console.error('Polling error', e);
+        }
+      }, 700);
+    }
+
+    function renderResults(result, jobData = null) {
+      document.getElementById('progress-card').classList.add('hidden');
+      document.getElementById('results-card').classList.remove('hidden');
+
+      if (jobData && jobData.job_id) {
+        currentJobId = jobData.job_id;
+      }
+
+      // Certificate Verification Banner
+      const certBanner = document.getElementById('res-cert-banner');
+      if (jobData && jobData.certificate_id && jobData.verification_token) {
+        currentVerificationToken = jobData.verification_token;
+        document.getElementById('res-cert-id').innerText = jobData.certificate_id;
+        document.getElementById('res-cert-verify-link').href = `${API_BASE}/verify/${jobData.verification_token}`;
+        certBanner.classList.remove('hidden');
+      } else {
+        certBanner.classList.add('hidden');
+        currentVerificationToken = null;
+      }
+
+      document.getElementById('res-title').innerText = result.title;
+      document.getElementById('res-meta').innerText = `${result.total_words} words analyzed (${result.scored_words} scored) • ${result.searched_description}`;
+
+      document.getElementById('res-overall').innerText = `${result.overall_similarity_pct.toFixed(1)}%`;
+      document.getElementById('res-exact').innerText = `${result.exact_pct.toFixed(1)}%`;
+      document.getElementById('res-near').innerText = `${result.near_pct.toFixed(1)}%`;
+      document.getElementById('res-para').innerText = `${result.paraphrase_pct.toFixed(1)}%`;
+
+      // Render Flags
+      const flagsList = document.getElementById('res-flags-list');
+      flagsList.innerHTML = '';
+      if (result.flags && result.flags.length > 0) {
+        result.flags.forEach(f => {
+          const li = document.createElement('li');
+          li.innerText = f;
+          flagsList.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.innerText = 'No evasion tactics detected; normal academic formatting applied.';
+        flagsList.appendChild(li);
+      }
+
+      // Render Sources List
+      const sourcesContainer = document.getElementById('res-sources-list');
+      sourcesContainer.innerHTML = '';
+      if (result.source_summaries && result.source_summaries.length > 0) {
+        result.source_summaries.forEach((s, idx) => {
+          const card = document.createElement('div');
+          card.className = 'p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs hover:border-slate-300 transition';
+          card.innerHTML = `
+            <div class="flex items-center justify-between font-bold text-slate-800 mb-1">
+              <span class="truncate">#${idx + 1} ${escapeHtml(s.label)}</span>
+              <span class="text-blue-600 font-extrabold ml-2">${s.percentage.toFixed(1)}%</span>
+            </div>
+            <div class="flex justify-between text-slate-500 text-[11px] mt-1">
+              <span>Type: ${escapeHtml(s.kind)} • Words: ${s.matched_words}</span>
+              <span class="capitalize font-semibold text-slate-600">Confidence: ${s.confidence}</span>
+            </div>
+          `;
+          sourcesContainer.appendChild(card);
+        });
+      } else {
+        sourcesContainer.innerHTML = '<p class="text-xs text-slate-500 py-3 text-center">No matching external sources exceeded thresholds.</p>';
+      }
+
+      // Render Highlighted Text
+      renderHighlightedText(result.cleaned_text || '', result.match_spans || []);
+    }
+
+    function renderHighlightedText(text, spans) {
+      const container = document.getElementById('res-highlighted-text');
+      if (!text || spans.length === 0) {
+        container.innerText = text || 'No text available.';
+        return;
+      }
+
+      spans.sort((a, b) => a.start_char - b.start_char);
+
+      let html = '';
+      let cursor = 0;
+
+      spans.forEach(span => {
+        if (span.start_char > cursor) {
+          html += escapeHtml(text.slice(cursor, span.start_char));
+        }
+        if (span.end_char > span.start_char) {
+          const matchedSlice = escapeHtml(text.slice(span.start_char, span.end_char));
+          const cssClass = `match-${span.match_type}`;
+          html += `<span class="${cssClass} rounded px-0.5" title="Source #${span.source_id} (${span.match_type})">${matchedSlice}</span>`;
+        }
+        cursor = Math.max(cursor, span.end_char);
+      });
+
+      if (cursor < text.length) {
+        html += escapeHtml(text.slice(cursor));
+      }
+
+      container.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    function copyVerificationLink() {
+      if (!currentVerificationToken) return;
+      const base = API_BASE || window.location.origin;
+      const url = `${base}/verify/${currentVerificationToken}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const textSpan = document.getElementById('res-cert-copy-text');
+        const orig = textSpan.innerText;
+        textSpan.innerText = 'Copied!';
+        setTimeout(() => { textSpan.innerText = orig; }, 2000);
+      }).catch(err => {
+        prompt('Copy verification link:', url);
+      });
+    }
+
+    function downloadCertificate() {
+      if (currentJobId) {
+        window.open(`${API_BASE}/api/jobs/${currentJobId}/certificate.pdf`, '_blank');
+      }
+    }
+
+    function downloadPdf() {
+      if (currentJobId) {
+        window.open(`${API_BASE}/api/jobs/${currentJobId}/report.pdf`, '_blank');
+      }
+    }
+
+    function resetScan() {
+      if (pollInterval) clearInterval(pollInterval);
+      setButtonLoading(false);
+      document.getElementById('progress-card').classList.add('hidden');
+      document.getElementById('results-card').classList.add('hidden');
+      document.getElementById('submit-card').classList.remove('hidden');
+      const certBanner = document.getElementById('res-cert-banner');
+      if (certBanner) certBanner.classList.add('hidden');
+      currentJobId = null;
+      currentVerificationToken = null;
+    }
+
+    // --- Authentication & User Management ---
+    let authMode = 'login';
+
+    function getAuthHeaders() {
+      const token = localStorage.getItem('pc_access_token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    function openAuthModal() {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      document.getElementById('auth-error').classList.add('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+    }
+
+    function switchAuthMode(mode) {
+      authMode = mode;
+      const tabLogin = document.getElementById('auth-tab-login');
+      const tabReg = document.getElementById('auth-tab-register');
+      const btn = document.getElementById('auth-submit-btn');
+
+      if (mode === 'login') {
+        tabLogin.className = 'flex-1 py-2 font-semibold text-blue-600 border-b-2 border-blue-600 text-sm';
+        tabReg.className = 'flex-1 py-2 font-medium text-slate-500 border-b-2 border-transparent text-sm';
+        btn.innerText = 'Sign In to Account';
+      } else {
+        tabReg.className = 'flex-1 py-2 font-semibold text-blue-600 border-b-2 border-blue-600 text-sm';
+        tabLogin.className = 'flex-1 py-2 font-medium text-slate-500 border-b-2 border-transparent text-sm';
+        btn.innerText = 'Create Academic Account';
+      }
+    }
+
+    async function submitAuth() {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const errBox = document.getElementById('auth-error');
+      errBox.classList.add('hidden');
+
+      if (!email || !password) {
+        errBox.innerText = 'Email and password are required.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errBox.innerText = data.detail || 'Authentication failed.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        localStorage.setItem('pc_access_token', data.access_token);
+        localStorage.setItem('pc_user_email', data.email);
+        localStorage.setItem('pc_user_tier', data.tier);
+        closeAuthModal();
+        updateAuthNav();
+      } catch (e) {
+        errBox.innerText = 'Network connection failed: ' + e.message;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    function signOut() {
+      localStorage.removeItem('pc_access_token');
+      localStorage.removeItem('pc_user_email');
+      localStorage.removeItem('pc_user_tier');
+      updateAuthNav();
+    }
+
+    async function updateAuthNav() {
+      const container = document.getElementById('auth-nav-container');
+      const token = localStorage.getItem('pc_access_token');
+      const email = localStorage.getItem('pc_user_email');
+      let tier = localStorage.getItem('pc_user_tier') || 'Free';
+      let quotaInfo = '';
+
+      if (token && email) {
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/me`, { headers: getAuthHeaders() });
+          if (res.ok) {
+            const profile = await res.json();
+            tier = profile.tier || tier;
+            const remaining = profile.daily_remaining;
+            const quota = profile.daily_quota >= 999999 ? '∞' : profile.daily_quota;
+            quotaInfo = `<span class="hidden md:inline-block text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Quota: ${remaining}/${quota} left</span>`;
+          } else if (res.status === 401) {
+            signOut();
+            return;
+          }
+        } catch (e) {
+          // offline/local network fallback
+        }
+
+        const username = email.split('@')[0];
+        const displayUsername = username.length > 10 ? username.slice(0, 8) + '…' : username;
+        container.innerHTML = `
+          <div class="flex items-center space-x-1.5 sm:space-x-2">
+            ${quotaInfo}
+            <button onclick="openHistoryModal()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-1 px-2 sm:py-1.5 sm:px-2.5 rounded-lg border border-slate-200 transition flex items-center space-x-1">
+              <span>📋</span> <span class="hidden sm:inline">My</span> <span>Scans</span>
+            </button>
+            <span class="text-xs text-slate-700 font-medium bg-slate-100 py-1 px-2 sm:py-1.5 sm:px-2.5 rounded-lg border border-slate-200 inline-flex items-center space-x-1">
+              <span class="hidden sm:inline">👤</span> <b>${escapeHtml(displayUsername)}</b> <span class="text-blue-600 font-bold uppercase text-[10px]">(${tier})</span>
+            </span>
+            <button onclick="signOut()" class="text-xs text-red-600 hover:text-red-800 font-semibold py-1 px-1.5 sm:px-2 transition">
+              Sign Out
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button onclick="openAuthModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-1.5 px-3 sm:py-2 sm:px-3.5 rounded-lg shadow-sm transition">
+            Sign In / Register
+          </button>
+        `;
+      }
+    }
+
+    // --- Scan History Management ---
+    function openHistoryModal() {
+      document.getElementById('history-modal').classList.remove('hidden');
+      loadHistory();
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('history-modal').classList.add('hidden');
+    }
+
+    async function loadHistory() {
+      const loading = document.getElementById('history-loading');
+      const empty = document.getElementById('history-empty');
+      const list = document.getElementById('history-list');
+
+      loading.classList.remove('hidden');
+      empty.classList.add('hidden');
+      list.innerHTML = '';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/user/jobs?limit=30`, { headers: getAuthHeaders() });
+        loading.classList.add('hidden');
+        if (!res.ok) {
+          list.innerHTML = '<p class="text-xs text-red-500 py-4 text-center">Failed to load history.</p>';
+          return;
+        }
+
+        const jobs = await res.json();
+        if (!jobs || jobs.length === 0) {
+          empty.classList.remove('hidden');
+          return;
+        }
+
+        jobs.forEach(job => {
+          const item = document.createElement('div');
+          item.className = 'p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-slate-300 transition';
+
+          let badge = '';
+          if (job.status === 'completed' && job.overall_similarity_pct !== null) {
+            const sim = job.overall_similarity_pct;
+            const colorClass = sim > 25 ? 'bg-red-100 text-red-800 border-red-200' : sim > 15 ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200';
+            badge = `<span class="px-2 py-0.5 rounded-full font-bold border ${colorClass}">${sim.toFixed(1)}% Similarity</span>`;
+          } else if (job.status === 'failed') {
+            badge = '<span class="px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700 border border-red-200">Failed</span>';
+          } else {
+            badge = `<span class="px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 border border-blue-200 capitalize">${job.stage || job.status} (${job.progress_pct}%)</span>`;
+          }
+
+          let verifyBtn = '';
+          if (job.token) {
+            verifyBtn = `<a href="${API_BASE}/verify/${job.token}" target="_blank" class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded text-slate-700 font-medium transition">Certificate</a>`;
+          }
+
+          item.innerHTML = `
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center space-x-2 mb-1">
+                <span class="font-bold text-slate-900 truncate text-sm">${escapeHtml(job.title || 'Document')}</span>
+                ${badge}
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center space-x-3">
+                <span>ID: <code class="font-mono text-slate-600">${job.job_id}</code></span>
+                <span>•</span>
+                <span>${job.created_at || 'Recent'}</span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1.5 self-end sm:self-center">
+              ${job.status === 'completed' ? `<button onclick="viewPastJob('${job.job_id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition shadow-sm">View</button>` : ''}
+              ${job.status === 'completed' ? `<a href="${API_BASE}/api/jobs/${job.job_id}/report.pdf" target="_blank" class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded text-slate-700 font-medium transition">PDF</a>` : ''}
+              ${verifyBtn}
+            </div>
+          `;
+          list.appendChild(item);
+        });
+
+      } catch (err) {
+        loading.classList.add('hidden');
+        list.innerHTML = `<p class="text-xs text-red-500 py-4 text-center">Error: ${err.message}</p>`;
+      }
+    }
+
+    async function viewPastJob(jobId) {
+      closeHistoryModal();
+      showProgress();
+      document.getElementById('progress-status').innerText = 'Loading Scan Results...';
+      document.getElementById('progress-stage').innerText = 'Fetching archived report...';
+      document.getElementById('progress-bar').style.width = '90%';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/jobs/${jobId}`);
+        if (!res.ok) {
+          showError('Could not load archived job.');
+          resetScan();
+          return;
+        }
+        const job = await res.json();
+        if (job.status === 'completed' && job.result) {
+          renderResults(job.result, job);
+        } else {
+          showError('This scan has not completed or has expired.');
+          resetScan();
+        }
+      } catch (e) {
+        showError('Network error loading scan: ' + e.message);
+        resetScan();
+      }
+    }
+
+    // Initialize listeners on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+      updateAuthNav();
+      setupDragAndDrop();
+      setupTextListeners();
+      updateWordCount();
+      console.log(`[Pre-Check] Initialized frontend on ${window.location.origin}. API Target: ${API_BASE || window.location.origin}`);
+    });
+  </script>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-sm w-full p-6 relative">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      <h3 class="text-lg font-bold text-slate-900 mb-1">Academic License Access</h3>
+      <p class="text-xs text-slate-500 mb-4">Sign in or register for unlimited daily scans and institutional access.</p>
+
+      <div class="flex border-b border-slate-200 mb-4">
+        <button id="auth-tab-login" onclick="switchAuthMode('login')" class="flex-1 py-2 font-semibold text-blue-600 border-b-2 border-blue-600 text-sm">Sign In</button>
+        <button id="auth-tab-register" onclick="switchAuthMode('register')" class="flex-1 py-2 font-medium text-slate-500 border-b-2 border-transparent text-sm">Register</button>
+      </div>
+
+      <div id="auth-error" class="hidden p-2.5 mb-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs"></div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+          <input type="email" id="auth-email" placeholder="scholar@university.edu" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button id="auth-submit-btn" onclick="submitAuth()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition mt-2">
+          Sign In to Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scan History Modal -->
+  <div id="history-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full p-5 sm:p-6 relative flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900">Your Plagiarism Check History</h3>
+          <p class="text-xs text-slate-500">Recent documents submitted under this account.</p>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+      <div id="history-loading" class="py-12 text-center text-slate-500 text-sm">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-2"></div>
+        <p>Loading scan history...</p>
+      </div>
+      <div id="history-empty" class="hidden py-12 text-center text-slate-500 text-sm">
+        <p class="text-slate-700 font-medium mb-1">No previous scans found</p>
+        <p class="text-xs">Your completed plagiarism checks will appear here.</p>
+      </div>
+      <div id="history-list" class="space-y-3 overflow-y-auto py-4 flex-1"></div>
+    </div>
+  </div>
+</body>
+</html>
