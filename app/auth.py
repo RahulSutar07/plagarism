@@ -13,7 +13,7 @@ import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,14 +28,40 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=Fals
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
+def validate_password_strength(password: str) -> None:
+    """Validate minimum password policy complexity:
+    - Minimum 8 characters
+    - At least one uppercase letter [A-Z]
+    - At least one lowercase letter [a-z]
+    - At least one number [0-9]
+    - At least one special symbol
+    """
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters long.")
+    if not re.search(r"[A-Z]", password):
+        raise ValueError("Password must contain at least one uppercase letter (A-Z).")
+    if not re.search(r"[a-z]", password):
+        raise ValueError("Password must contain at least one lowercase letter (a-z).")
+    if not re.search(r"\d", password):
+        raise ValueError("Password must contain at least one number (0-9).")
+    if not re.search(r"""[!@#$%^&*(),.?":{}|<>\-_=+\\\[\];'/~`]""", password):
+        raise ValueError("Password must contain at least one special character (!@#$%^&* etc.).")
+
+
 class UserRegisterRequest(BaseModel):
-    email: str = Field(..., description="User email address")
-    password: str = Field(..., min_length=8, description="Password (at least 8 characters)")
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, description="Password (at least 8 characters, complex)")
+
+    @field_validator("password")
+    @classmethod
+    def check_password_complexity(cls, v: str) -> str:
+        validate_password_strength(v)
+        return v
 
 
 class UserLoginRequest(BaseModel):
-    email: str
-    password: str
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., description="Account password")
 
 
 class TokenResponse(BaseModel):

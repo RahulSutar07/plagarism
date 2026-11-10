@@ -4,8 +4,9 @@ from __future__ import annotations
 import html
 from pathlib import Path
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,6 +20,7 @@ from app.auth import (
     get_current_user,
     get_optional_user,
     hash_password,
+    validate_password_strength,
     verify_password,
 )
 from app.config import get_settings
@@ -26,8 +28,10 @@ from app.database import get_db, init_db
 from app.models import User
 from app.rate_limit import (
     check_and_increment_rate_limit,
+    enforce_auth_rate_limit,
     enforce_concurrency_limit,
     get_client_identifier,
+    get_client_ip,
 )
 from app.schemas import (
     CertificateVerificationResponse,
@@ -70,6 +74,21 @@ app = FastAPI(
     version=settings.engine_version,
     description="High-Accuracy Asynchronous Plagiarism Pre-Check Platform",
 )
+
+
+@app.exception_handler(RequestValidationError)
+def request_validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Normalize Pydantic validation errors (invalid email, missing fields) into clean 400 responses."""
+    errors = exc.errors()
+    msg = errors[0].get("msg", "Invalid request format.") if errors else "Invalid request format."
+    if "email" in str(errors).lower():
+        msg = "Invalid email address format."
+    elif "value error" in msg.lower():
+        msg = msg.replace("Value error, ", "").strip()
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": msg},
+    )
 
 # Enable CORS for local Next.js frontend, localhost:8000, and configured site_url
 app.add_middleware(
@@ -153,17 +172,33 @@ def limits() -> dict:
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def register_user(payload: UserRegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    """Register new user account."""
-    if not EMAIL_REGEX.match(payload.email):
+def register_user(
+    request: Request,
+    payload: UserRegisterRequest,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """Register new user account with rate limits and password complexity enforcement."""
+    client_ip = get_client_ip(request)
+    normalized_email = str(payload.email).strip().lower()
+
+    # Enforce rate limits: 10 per IP per hour, 5 per email per hour
+    enforce_auth_rate_limit(db, f"register:ip:{client_ip}", max_requests=10, window_seconds=3600, action_name="registration")
+    enforce_auth_rate_limit(db, f"register:email:{normalized_email}", max_requests=5, window_seconds=3600, action_name="registration")
+
+    if not EMAIL_REGEX.match(normalized_email):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email address format.")
 
-    existing = db.scalar(select(User).where(User.email == payload.email.lower()))
+    try:
+        validate_password_strength(payload.password)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    existing = db.scalar(select(User).where(User.email == normalized_email))
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="An account with this email already exists.")
 
     new_user = User(
-        email=payload.email.lower(),
+        email=normalized_email,
         hashed_password=hash_password(payload.password),
         role="user",
         tier="free",
@@ -183,9 +218,20 @@ def register_user(payload: UserRegisterRequest, db: Session = Depends(get_db)) -
 
 
 @app.post("/api/auth/login", response_model=TokenResponse)
-def login_user(payload: UserLoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    """Authenticate existing user and issue JWT bearer token."""
-    user = db.scalar(select(User).where(User.email == payload.email.lower(), User.is_active.is_(True)))
+def login_user(
+    request: Request,
+    payload: UserLoginRequest,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """Authenticate existing user with IP and email brute-force rate limit defense."""
+    client_ip = get_client_ip(request)
+    normalized_email = str(payload.email).strip().lower()
+
+    # Enforce login brute-force defenses: 10 attempts per IP per 15 min, 5 attempts per email per 15 min
+    enforce_auth_rate_limit(db, f"login:ip:{client_ip}", max_requests=10, window_seconds=900, action_name="login")
+    enforce_auth_rate_limit(db, f"login:email:{normalized_email}", max_requests=5, window_seconds=900, action_name="login")
+
+    user = db.scalar(select(User).where(User.email == normalized_email, User.is_active.is_(True)))
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
